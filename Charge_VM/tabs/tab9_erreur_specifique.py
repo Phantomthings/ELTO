@@ -8,6 +8,7 @@ from tabs.context import get_context
 
 TAB_CODE = """
 st.markdown("### 🔍 Analyse Erreur Spécifique")
+BASE_CHARGE_URL = "https://elto.nidec-asi-online.com/Charge/detail?id="
 with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
     st.caption("Renseignez tout ou partie d'une adresse MAC pour lister les charges associées")
 
@@ -111,8 +112,12 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                             st.info(f"Aucune {title.lower()} pour ce préfixe MAC.")
                             return
 
-                        if "ID" in df_source.columns and "with_charge_link" in locals():
-                            df_source = with_charge_link(df_source, id_col="ID", link_col="Lien Elto")
+                        if "ID" in df_source.columns:
+                            if "with_charge_link" in locals():
+                                df_source = with_charge_link(df_source, id_col="ID", link_col="Lien Elto")
+                            elif "Lien Elto" not in df_source.columns:
+                                df_source = df_source.copy()
+                                df_source["Lien Elto"] = BASE_CHARGE_URL + df_source["ID"].astype(str).str.strip()
 
                         display_cols = [
                             "Site",
@@ -297,7 +302,6 @@ else:
             st.markdown(
                 f"**Code {code_list_str} → {total_pct}% des erreurs totales**"
             )
-    BASE_CHARGE_URL = "https://elto.nidec-asi-online.com/Charge/detail?id="
     if not isinstance(sess, pd.DataFrame) or sess.empty:
         st.info("Aucune donnée disponible.")
     else:
