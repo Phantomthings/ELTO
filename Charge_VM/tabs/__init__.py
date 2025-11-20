@@ -1,0 +1,31 @@
+from . import (
+    tab0_overview,
+    tab1_general,
+    tab2_comparaison,
+    tab3_details_pdc,
+    tab4_stats,
+    tab5_projection,
+    tab6_tentatives,
+    tab7_suspectes,
+    tab8_erreur_moment,
+    tab9_erreur_specifique,
+    tab10_alertes,
+    tab11_evolution,
+    tab12_defauts_historique,
+)
+
+__all__ = [
+    "tab0_overview",
+    "tab1_general",
+    "tab2_comparaison",
+    "tab3_details_pdc",
+    "tab4_stats",
+    "tab5_projection",
+    "tab6_tentatives",
+    "tab7_suspectes",
+    "tab8_erreur_moment",
+    "tab9_erreur_specifique",
+    "tab10_alertes",
+    "tab11_evolution",
+    "tab12_defauts_historique",
+]
