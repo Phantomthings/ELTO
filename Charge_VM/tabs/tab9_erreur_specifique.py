@@ -6,9 +6,10 @@ import streamlit as st
 
 from tabs.context import get_context
 
+BASE_CHARGE_URL = "https://elto.nidec-asi-online.com/Charge/detail?id="
+
 TAB_CODE = """
 st.markdown("### 🔍 Analyse Erreur Spécifique")
-BASE_CHARGE_URL = "https://elto.nidec-asi-online.com/Charge/detail?id="
 with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
     st.caption("Renseignez tout ou partie d'une adresse MAC pour lister les charges associées")
 
@@ -647,7 +648,7 @@ else:
 
 def render():
     ctx = get_context()
-    globals_dict = {"np": np, "pd": pd, "px": px, "go": go, "st": st}
+    globals_dict = {"np": np, "pd": pd, "px": px, "go": go, "st": st, "BASE_CHARGE_URL": BASE_CHARGE_URL}
     local_vars = dict(ctx.__dict__)
     local_vars.setdefault('plot', getattr(ctx, 'plot', None))
     local_vars.setdefault('hide_zero_labels', getattr(ctx, 'hide_zero_labels', None))
