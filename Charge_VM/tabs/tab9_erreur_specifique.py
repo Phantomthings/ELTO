@@ -8,6 +8,113 @@ from tabs.context import get_context
 
 TAB_CODE = """
 st.markdown("### 🔍 Analyse Erreur Spécifique")
+with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
+    st.caption("Renseignez tout ou partie d'une adresse MAC pour lister les charges associées")
+
+    if "charges_mac" not in locals() or not isinstance(charges_mac, pd.DataFrame) or charges_mac.empty:
+        st.info("Données 'charges_mac' indisponibles pour la recherche par MAC.")
+    else:
+        with st.form("mac_filter_form_tab9"):
+            mac_query = st.text_input(
+                "Adresse MAC ou préfixe",
+                value="",
+                placeholder="ex : 4E:5D",
+                help="Saisir une adresse complète ou un préfixe (ex : 4E:5D pour filtrer toutes les MAC qui commencent par 4E:5D)",
+                key="mac_filter_query_tab9",
+            )
+            submit_mac = st.form_submit_button("Rechercher", type="primary")
+
+        if submit_mac:
+            import re
+
+            mac_norm = (
+                mac_query.strip()
+                .lower()
+                .replace("0x", "", 1)
+            )
+            mac_norm = re.sub(r"[^0-9a-f]", "", mac_norm)
+
+            if not mac_norm:
+                st.warning("Saisissez une adresse ou un préfixe MAC valide.")
+            else:
+                df_mac = charges_mac.copy()
+
+                if "mac" in df_mac.columns:
+                    df_mac["_mac_norm"] = df_mac["mac"].astype(str)
+                elif "MAC Address" in df_mac.columns:
+                    df_mac["_mac_norm"] = df_mac["MAC Address"].astype(str)
+                else:
+                    df_mac["_mac_norm"] = ""
+
+                df_mac["_mac_norm"] = (
+                    df_mac["_mac_norm"]
+                    .str.lower()
+                    .str.replace("0x", "", regex=False)
+                    .str.replace(r"[^0-9a-f]", "", regex=True)
+                )
+
+                mask_mac = df_mac["_mac_norm"].str.startswith(mac_norm)
+                df_mac = df_mac[mask_mac].copy()
+
+                if "Site" in df_mac.columns and st.session_state.get("site_sel"):
+                    df_mac = df_mac[df_mac["Site"].isin(st.session_state.site_sel)]
+
+                if (
+                    "Datetime start" in df_mac.columns
+                    and st.session_state.get("d1")
+                    and st.session_state.get("d2")
+                ):
+                    df_mac["Datetime start"] = pd.to_datetime(df_mac["Datetime start"], errors="coerce")
+                    d1 = pd.Timestamp(st.session_state.get("d1"))
+                    d2 = pd.Timestamp(st.session_state.get("d2")) + pd.Timedelta(days=1)
+                    df_mac = df_mac[df_mac["Datetime start"].ge(d1) & df_mac["Datetime start"].lt(d2)]
+
+                if df_mac.empty:
+                    st.info("Aucune charge trouvée pour ce préfixe MAC.")
+                else:
+                    if "Datetime end" in df_mac.columns:
+                        df_mac["Datetime end"] = pd.to_datetime(df_mac["Datetime end"], errors="coerce")
+                    if "Energy (Kwh)" in df_mac.columns:
+                        df_mac["Energy (Kwh)"] = pd.to_numeric(df_mac["Energy (Kwh)"], errors="coerce")
+                    if "MAC Address" in df_mac.columns:
+                        df_mac["MAC Address"] = df_mac["MAC Address"].apply(_fmt_mac)
+
+                    display_cols = [
+                        "Site",
+                        "PDC",
+                        "Datetime start",
+                        "Datetime end",
+                        "MAC Address",
+                        "Vehicle",
+                        "Energy (Kwh)",
+                        "ID",
+                    ]
+                    display_cols = [c for c in display_cols if c in df_mac.columns]
+
+                    df_mac = df_mac[display_cols].copy()
+                    if "Datetime start" in df_mac.columns:
+                        df_mac = df_mac.sort_values("Datetime start", ascending=False)
+
+                    if "ID" in df_mac.columns and "with_charge_link" in locals():
+                        df_mac = with_charge_link(df_mac, id_col="ID", link_col="Lien Elto")
+
+                    df_mac.insert(0, "#", range(1, len(df_mac) + 1))
+
+                    st.data_editor(
+                        df_mac,
+                        hide_index=True,
+                        use_container_width=True,
+                        column_config={
+                            "Lien Elto": st.column_config.LinkColumn(
+                                "Lien Elto",
+                                help="Ouvrir la session dans Elto",
+                                display_text="🔗 Ouvrir",
+                            ),
+                            "Datetime start": st.column_config.DatetimeColumn("Start time", format="YYYY-MM-DD HH:mm:ss"),
+                            "Datetime end": st.column_config.DatetimeColumn("End time", format="YYYY-MM-DD HH:mm:ss"),
+                            "Energy (Kwh)": st.column_config.NumberColumn("Energy (kWh)", format="%.3f"),
+                        },
+                    )
 with st.expander("🔍 Filtrer par code", expanded=False):
     code_raw_tab = st.text_input(
         "N° d'erreur / Code PC",
