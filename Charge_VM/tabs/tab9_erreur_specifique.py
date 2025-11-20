@@ -72,49 +72,88 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                 if df_mac.empty:
                     st.info("Aucune charge trouvée pour ce préfixe MAC.")
                 else:
+                    if (
+                        "sessions" in locals()
+                        and isinstance(sessions, pd.DataFrame)
+                        and not sessions.empty
+                        and "ID" in df_mac.columns
+                    ):
+                        sess_lookup = sessions[["ID", "Datetime end"]].copy()
+                        sess_lookup["ID"] = sess_lookup["ID"].astype(str).str.strip()
+                        df_mac["ID"] = df_mac["ID"].astype(str).str.strip()
+                        df_mac = df_mac.merge(
+                            sess_lookup,
+                            on="ID",
+                            how="left",
+                            suffixes=("", "_from_sessions"),
+                        )
+                        if "Datetime end_from_sessions" in df_mac.columns:
+                            df_mac["Datetime end"] = df_mac.get("Datetime end").fillna(
+                                df_mac.pop("Datetime end_from_sessions")
+                            )
+
                     if "Datetime end" in df_mac.columns:
                         df_mac["Datetime end"] = pd.to_datetime(df_mac["Datetime end"], errors="coerce")
                     if "Energy (Kwh)" in df_mac.columns:
                         df_mac["Energy (Kwh)"] = pd.to_numeric(df_mac["Energy (Kwh)"], errors="coerce")
                     if "MAC Address" in df_mac.columns:
                         df_mac["MAC Address"] = df_mac["MAC Address"].apply(_fmt_mac)
+                    if "is_ok" in df_mac.columns:
+                        is_ok_series = df_mac["is_ok"]
+                        if not pd.api.types.is_bool_dtype(is_ok_series):
+                            is_ok_series = pd.to_numeric(is_ok_series, errors="coerce").fillna(0).astype(int).astype(bool)
+                        df_mac["_is_ok_bool"] = is_ok_series
+                    else:
+                        df_mac["_is_ok_bool"] = False
 
-                    display_cols = [
-                        "Site",
-                        "PDC",
-                        "Datetime start",
-                        "Datetime end",
-                        "MAC Address",
-                        "Vehicle",
-                        "Energy (Kwh)",
-                        "ID",
-                    ]
-                    display_cols = [c for c in display_cols if c in df_mac.columns]
+                    def _render_mac_table(df_source: pd.DataFrame, title: str):
+                        if df_source.empty:
+                            st.info(f"Aucune {title.lower()} pour ce préfixe MAC.")
+                            return
 
-                    df_mac = df_mac[display_cols].copy()
-                    if "Datetime start" in df_mac.columns:
-                        df_mac = df_mac.sort_values("Datetime start", ascending=False)
+                        display_cols = [
+                            "Site",
+                            "PDC",
+                            "Datetime start",
+                            "Datetime end",
+                            "MAC Address",
+                            "Vehicle",
+                            "Energy (Kwh)",
+                            "ID",
+                        ]
+                        display_cols = [c for c in display_cols if c in df_source.columns]
 
-                    if "ID" in df_mac.columns and "with_charge_link" in locals():
-                        df_mac = with_charge_link(df_mac, id_col="ID", link_col="Lien Elto")
+                        df_out = df_source[display_cols].copy()
+                        if "Datetime start" in df_out.columns:
+                            df_out = df_out.sort_values("Datetime start", ascending=False)
 
-                    df_mac.insert(0, "#", range(1, len(df_mac) + 1))
+                        if "ID" in df_out.columns and "with_charge_link" in locals():
+                            df_out = with_charge_link(df_out, id_col="ID", link_col="Lien Elto")
 
-                    st.data_editor(
-                        df_mac,
-                        hide_index=True,
-                        use_container_width=True,
-                        column_config={
-                            "Lien Elto": st.column_config.LinkColumn(
-                                "Lien Elto",
-                                help="Ouvrir la session dans Elto",
-                                display_text="🔗 Ouvrir",
-                            ),
-                            "Datetime start": st.column_config.DatetimeColumn("Start time", format="YYYY-MM-DD HH:mm:ss"),
-                            "Datetime end": st.column_config.DatetimeColumn("End time", format="YYYY-MM-DD HH:mm:ss"),
-                            "Energy (Kwh)": st.column_config.NumberColumn("Energy (kWh)", format="%.3f"),
-                        },
-                    )
+                        df_out.insert(0, "#", range(1, len(df_out) + 1))
+
+                        st.subheader(title)
+                        st.data_editor(
+                            df_out,
+                            hide_index=True,
+                            use_container_width=True,
+                            column_config={
+                                "Lien Elto": st.column_config.LinkColumn(
+                                    "Lien Elto",
+                                    help="Ouvrir la session dans Elto",
+                                    display_text="🔗 Ouvrir",
+                                ),
+                                "Datetime start": st.column_config.DatetimeColumn("Start time", format="YYYY-MM-DD HH:mm:ss"),
+                                "Datetime end": st.column_config.DatetimeColumn("End time", format="YYYY-MM-DD HH:mm:ss"),
+                                "Energy (Kwh)": st.column_config.NumberColumn("Energy (kWh)", format="%.3f"),
+                            },
+                        )
+
+                    df_ok = df_mac[df_mac["_is_ok_bool"]].copy()
+                    df_nok = df_mac[~df_mac["_is_ok_bool"]].copy()
+
+                    _render_mac_table(df_ok, "Charges OK")
+                    _render_mac_table(df_nok, "Charges NOK")
 with st.expander("🔍 Filtrer par code", expanded=False):
     code_raw_tab = st.text_input(
         "N° d'erreur / Code PC",
@@ -612,5 +651,6 @@ def render():
     tables_ref = local_vars.get('tables')
     if isinstance(tables_ref, dict):
         local_vars.setdefault('charges_mac', tables_ref.get('charges_mac', pd.DataFrame()))
+        local_vars.setdefault('sessions', tables_ref.get('sessions', pd.DataFrame()))
     local_vars = {k: v for k, v in local_vars.items() if v is not None}
     exec(TAB_CODE, globals_dict, local_vars)
