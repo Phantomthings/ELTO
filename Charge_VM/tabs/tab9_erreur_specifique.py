@@ -111,12 +111,16 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                             st.info(f"Aucune {title.lower()} pour ce préfixe MAC.")
                             return
 
+                        if "ID" in df_source.columns and "with_charge_link" in locals():
+                            df_source = with_charge_link(df_source, id_col="ID", link_col="Lien Elto")
+
                         display_cols = [
                             "Site",
                             "PDC",
                             "Datetime start",
                             "Datetime end",
                             "MAC Address",
+                            "Lien Elto",
                             "Vehicle",
                             "Energy (Kwh)",
                             "ID",
@@ -126,9 +130,6 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                         df_out = df_source[display_cols].copy()
                         if "Datetime start" in df_out.columns:
                             df_out = df_out.sort_values("Datetime start", ascending=False)
-
-                        if "ID" in df_out.columns and "with_charge_link" in locals():
-                            df_out = with_charge_link(df_out, id_col="ID", link_col="Lien Elto")
 
                         df_out.insert(0, "#", range(1, len(df_out) + 1))
 
