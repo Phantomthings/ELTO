@@ -123,10 +123,10 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                 if "is_ok" in df_mac.columns:
                     is_ok_series = df_mac["is_ok"]
                     if not pd.api.types.is_bool_dtype(is_ok_series):
-                            is_ok_series = pd.to_numeric(is_ok_series, errors="coerce").fillna(0).astype(int).astype(bool)
+                        is_ok_series = pd.to_numeric(is_ok_series, errors="coerce").fillna(0).astype(int).astype(bool)
                         df_mac["_is_ok_bool"] = is_ok_series
                     else:
-                        df_mac["_is_ok_bool"] = False
+                        df_mac["_is_ok_bool"] = is_ok_series.fillna(False)
 
                     def _render_mac_table(df_source: pd.DataFrame, title: str):
                         if df_source.empty:
