@@ -22,34 +22,6 @@ with st.expander("🔍 Filtrer par code", expanded=False):
         index=0,
         key="code_filter_type_tab"
     )
-
-with st.expander("🖧 Filtrer par MAC address", expanded=False):
-    mac_prefix_tab = st.text_input(
-        "Préfixe ou motif MAC",
-        value="",
-        placeholder="ex : 4E:5D ou 4E5D",
-        key="mac_prefix_filter_tab",
-        help="Saisissez un début de MAC ; la recherche ignore les : et la casse."
-    )
-
-def _mask_mac_prefix(df: pd.DataFrame, mac_raw: str):
-    import re
-
-    if "MAC Address" not in df.columns or not mac_raw.strip():
-        return pd.Series(True, index=df.index)
-
-    prefix = re.sub(r"[^0-9A-Fa-f]", "", mac_raw).upper()
-    if not prefix:
-        return pd.Series(True, index=df.index)
-
-    mac_clean = (
-        df["MAC Address"]
-        .fillna("")
-        .astype(str)
-        .str.upper()
-        .str.replace(r"[^0-9A-F]", "", regex=True)
-    )
-    return mac_clean.str.startswith(prefix)
 def _mask_code_local(df: pd.DataFrame, code_raw: str, code_type: str):
     import re
     if not code_raw.strip():
@@ -194,8 +166,6 @@ else:
                 mask_moment = df_src["moment"].isin(st.session_state.moment_sel)
 
             df_src_f = df_src[mask_type & mask_moment].copy()
-            mask_mac_tab = _mask_mac_prefix(df_src_f, mac_prefix_tab)
-            df_src_f = df_src_f[mask_mac_tab].copy()
             mask_code_tab = _mask_code_local(df_src_f, code_raw_tab, code_type_tab)
             df_src_f = df_src_f[mask_code_tab].copy()
             if code_type_tab == "Erreur_EVI":
