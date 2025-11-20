@@ -13,6 +13,10 @@ st.markdown("### 🔍 Analyse Erreur Spécifique")
 with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
     st.caption("Renseignez tout ou partie d'une adresse MAC pour lister les charges associées")
 
+    if "BASE_CHARGE_URL" not in globals():
+        globals()["BASE_CHARGE_URL"] = "https://elto.nidec-asi-online.com/Charge/detail?id="
+    BASE_CHARGE_URL = globals()["BASE_CHARGE_URL"]
+
     if "charges_mac" not in locals() or not isinstance(charges_mac, pd.DataFrame) or charges_mac.empty:
         st.info("Données 'charges_mac' indisponibles pour la recherche par MAC.")
     else:
