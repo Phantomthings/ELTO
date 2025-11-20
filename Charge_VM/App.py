@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 import plotly.graph_objects as go
 import datetime
 import calendar
+import re
 from tabs.context import get_context
 from tabs import (
     tab0_overview,
@@ -159,9 +160,18 @@ def hide_zero_labels(fig):
     return fig
 
 def _fmt_mac(s: str) -> str:
-    if not s: return ""
-    if len(s) % 2: s = "0" + s
-    pairs = [s[i:i+2] for i in range(0, min(12, len(s)), 2)]
+    if not s:
+        return ""
+
+    cleaned = str(s).strip().lower().replace("0x", "", 1)
+    cleaned = re.sub(r"[^0-9a-f]", "", cleaned)
+    if not cleaned:
+        return ""
+
+    if len(cleaned) % 2:
+        cleaned = "0" + cleaned
+
+    pairs = [cleaned[i:i+2] for i in range(0, min(12, len(cleaned)), 2)]
     return ":".join(pairs).upper()
 
 def with_charge_link(df: pd.DataFrame, id_col: str = "ID", link_col: str = "Lien") -> pd.DataFrame:
