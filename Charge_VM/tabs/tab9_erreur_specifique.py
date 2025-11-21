@@ -191,6 +191,64 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
 
                     _render_mac_table(df_ok, "Charges OK")
                     _render_mac_table(df_nok, "Charges NOK")
+
+    st.divider()
+
+    st.subheader("Top 10 des adresses MAC non identifiées")
+
+    mac_id_df = None
+    if "kpi_mac_id" in locals() and isinstance(kpi_mac_id, pd.DataFrame):
+        mac_id_df = kpi_mac_id
+    elif "mac_id" in locals() and isinstance(mac_id, pd.DataFrame):
+        mac_id_df = mac_id
+
+    if mac_id_df is None or mac_id_df.empty:
+        st.info("Données 'kpi_mac_id' indisponibles.")
+    else:
+        df_mac_id = mac_id_df.copy()
+
+        if "Mac" in df_mac_id.columns:
+            if "_fmt_mac" in locals():
+                df_mac_id["Mac"] = df_mac_id["Mac"].apply(_fmt_mac)
+            else:
+                df_mac_id["Mac"] = df_mac_id["Mac"].astype(str).str.strip()
+
+        charges_col = None
+        for col in ("nombre_de_charges", "Nombre_de_charges", "nb_charges"):
+            if col in df_mac_id.columns:
+                charges_col = col
+                break
+        if charges_col is None:
+            charges_col = "nombre_de_charges"
+            df_mac_id[charges_col] = pd.NA
+
+        df_mac_id = df_mac_id.rename(columns={charges_col: "Nombre de charges"})
+
+        mac_id_filter = st.text_input(
+            "Filtrer par adresse MAC",
+            value="",
+            placeholder="ex : 4E:5D",
+            key="mac_id_filter_tab9",
+            help="Filtre partiel ou complet appliqué sur la table kpi_mac_id.",
+        )
+
+        if mac_id_filter.strip():
+            query = mac_id_filter.strip()
+            df_mac_id = df_mac_id[df_mac_id["Mac"].str.contains(query, case=False, na=False)]
+
+        df_mac_id = df_mac_id.sort_values("Nombre de charges", ascending=False)
+        df_mac_id = df_mac_id.head(10)
+        df_mac_id.insert(0, "#", range(1, len(df_mac_id) + 1))
+
+        st.data_editor(
+            df_mac_id,
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Nombre de charges": st.column_config.NumberColumn("Nombre de charges", format="%d"),
+                "Mac": st.column_config.TextColumn("Adresse MAC"),
+            },
+        )
 with st.expander("🔍 Filtrer par code", expanded=False):
     code_raw_tab = st.text_input(
         "N° d'erreur / Code PC",
@@ -689,5 +747,6 @@ def render():
     if isinstance(tables_ref, dict):
         local_vars.setdefault('charges_mac', tables_ref.get('charges_mac', pd.DataFrame()))
         local_vars.setdefault('sessions', tables_ref.get('sessions', pd.DataFrame()))
+        local_vars.setdefault('kpi_mac_id', tables_ref.get('mac_id', pd.DataFrame()))
     local_vars = {k: v for k, v in local_vars.items() if v is not None}
     exec(TAB_CODE, globals_dict, local_vars)
