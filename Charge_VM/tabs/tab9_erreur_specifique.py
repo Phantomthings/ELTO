@@ -128,6 +128,16 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                     else:
                         df_mac["_is_ok_bool"] = is_ok_series.fillna(False)
 
+                    total_mac = len(df_mac)
+                    nb_ok = int(df_mac["_is_ok_bool"].sum())
+                    taux_ok = (nb_ok / total_mac * 100) if total_mac else 0
+
+                    st.metric(
+                        "Taux de réussite MAC",
+                        f"{taux_ok:.1f} %",
+                        help="Part des charges associées à ce préfixe MAC marquées comme réussies",
+                    )
+
                     def _render_mac_table(df_source: pd.DataFrame, title: str):
                         if df_source.empty:
                             st.info(f"Aucune {title.lower()} pour ce préfixe MAC.")
