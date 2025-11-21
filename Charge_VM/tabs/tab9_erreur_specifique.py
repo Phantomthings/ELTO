@@ -156,6 +156,7 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                             "Datetime start",
                             "Datetime end",
                             "Évolution SOC",
+                            "Error etiquette",
                             "MAC Address",
                             "Lien Elto",
                             "Vehicle",
@@ -188,6 +189,35 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
 
                     df_ok = df_mac[df_mac["_is_ok_bool"]].copy()
                     df_nok = df_mac[~df_mac["_is_ok_bool"]].copy()
+
+                    def _with_error_etiquette(df_source: pd.DataFrame) -> pd.DataFrame:
+                        if (
+                            df_source.empty
+                            or "ID" not in df_source.columns
+                            or "sessions" not in locals()
+                            or not isinstance(sessions, pd.DataFrame)
+                            or sessions.empty
+                            or not {"type_erreur", "moment"}.issubset(sessions.columns)
+                        ):
+                            return df_source
+
+                        df_out = df_source.copy()
+                        df_out["ID"] = df_out["ID"].astype(str).str.strip()
+
+                        errs = sessions[["ID", "type_erreur", "moment"]].copy()
+                        errs["ID"] = errs["ID"].astype(str).str.strip()
+                        errs["Error etiquette"] = errs.apply(
+                            lambda r: f"{r['type_erreur']} - {r['moment']}"
+                            if pd.notna(r.get("type_erreur")) and pd.notna(r.get("moment"))
+                            else pd.NA,
+                            axis=1,
+                        )
+                        errs = errs[["ID", "Error etiquette"]]
+
+                        df_out = df_out.merge(errs, on="ID", how="left")
+                        return df_out
+
+                    df_nok = _with_error_etiquette(df_nok)
 
                     _render_mac_table(df_ok, "Charges OK")
                     _render_mac_table(df_nok, "Charges NOK")
