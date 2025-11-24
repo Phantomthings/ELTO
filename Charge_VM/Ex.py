@@ -18,10 +18,14 @@ def build_engine(uri: str) -> Engine:
     return create_engine(uri)
 
 
+def _normalize_column_name(name: str) -> str:
+    return " ".join(name.strip().split()).lower()
+
+
 def find_column(columns: Sequence[str], candidates: Sequence[str]) -> str | None:
-    lower_map = {col.lower(): col for col in columns}
+    normalized_map = {_normalize_column_name(col): col for col in columns}
     for candidate in candidates:
-        match = lower_map.get(candidate.lower())
+        match = normalized_map.get(_normalize_column_name(candidate))
         if match:
             return match
     return None
