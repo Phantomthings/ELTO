@@ -156,6 +156,7 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                             "Datetime start",
                             "Datetime end",
                             "Évolution SOC",
+                            "Error etiquette",
                             "MAC Address",
                             "Lien Elto",
                             "Vehicle",
@@ -183,11 +184,45 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                                 "Datetime start": st.column_config.DatetimeColumn("Start time", format="YYYY-MM-DD HH:mm:ss"),
                                 "Datetime end": st.column_config.DatetimeColumn("End time", format="YYYY-MM-DD HH:mm:ss"),
                                 "Energy (Kwh)": st.column_config.NumberColumn("Energy (kWh)", format="%.3f"),
+                                "Error etiquette": st.column_config.TextColumn("Error etiquette"),
                             },
                         )
 
                     df_ok = df_mac[df_mac["_is_ok_bool"]].copy()
                     df_nok = df_mac[~df_mac["_is_ok_bool"]].copy()
+
+                    if (
+                        not df_nok.empty
+                        and "ID" in df_nok.columns
+                        and "sessions" in locals()
+                        and isinstance(sessions, pd.DataFrame)
+                        and not sessions.empty
+                    ):
+                        err_cols = [
+                            c
+                            for c in ("ID", "type_erreur", "moment")
+                            if c in sessions.columns
+                        ]
+                        if {"ID", "type_erreur", "moment"}.issubset(err_cols):
+                            err_lookup = sessions[err_cols].copy()
+                            err_lookup["ID"] = err_lookup["ID"].astype(str).str.strip()
+
+                            def _fmt_etiquette(row):
+                                t = str(row.get("type_erreur", "") or "")
+                                m = str(row.get("moment", "") or "")
+                                if t and m:
+                                    return f"{t} - {m}"
+                                return t or m
+
+                            err_lookup["Error etiquette"] = err_lookup.apply(
+                                _fmt_etiquette, axis=1
+                            )
+                            df_nok["ID"] = df_nok["ID"].astype(str).str.strip()
+                            df_nok = df_nok.merge(
+                                err_lookup[["ID", "Error etiquette"]],
+                                on="ID",
+                                how="left",
+                            )
 
                     _render_mac_table(df_ok, "Charges OK")
                     _render_mac_table(df_nok, "Charges NOK")
