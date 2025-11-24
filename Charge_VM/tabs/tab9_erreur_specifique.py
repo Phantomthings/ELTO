@@ -224,18 +224,6 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
 
         df_mac_id = df_mac_id.rename(columns={charges_col: "Nombre de charges"})
 
-        mac_id_filter = st.text_input(
-            "Filtrer par adresse MAC",
-            value="",
-            placeholder="ex : 4E:5D",
-            key="mac_id_filter_tab9",
-            help="Filtre partiel ou complet appliqué sur la table kpi_mac_id.",
-        )
-
-        if mac_id_filter.strip():
-            query = mac_id_filter.strip()
-            df_mac_id = df_mac_id[df_mac_id["Mac"].str.contains(query, case=False, na=False)]
-
         df_mac_id = df_mac_id.sort_values("Nombre de charges", ascending=False)
         df_mac_id = df_mac_id.head(10)
         df_mac_id.insert(0, "#", range(1, len(df_mac_id) + 1))
@@ -249,6 +237,7 @@ with st.expander("🔍 Filtrer par Mac adresse", expanded=False):
                 "Mac": st.column_config.TextColumn("Adresse MAC"),
             },
         )
+        
 with st.expander("🔍 Filtrer par code", expanded=False):
     code_raw_tab = st.text_input(
         "N° d'erreur / Code PC",
