@@ -347,6 +347,32 @@
         </div>
         {% endif %}
     </div>
+
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-top: 1.25rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Répartition des types d'erreur (EVI, Downstream, Erreur_Unknow_S)
+        </h4>
+        {% if error_type_distribution %}
+        <div class="bar-chart">
+            {% for item in error_type_distribution %}
+            <div class="bar-row">
+                <span class="bar-label">{{ item.label }}</span>
+                <div class="bar-container">
+                    <div class="bar bar-danger" style="width: {{ item.percent }}%;"></div>
+                </div>
+                <span class="bar-value text-danger">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 1rem; font-weight: 600; color: var(--color-text);">
+            Total erreurs suivies : {{ error_type_total }}
+        </div>
+        {% else %}
+        <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">
+            Aucun des types d'erreur suivis (EVI, Downstream ou Erreur_Unknow_S) sur la période sélectionnée
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 <script>
