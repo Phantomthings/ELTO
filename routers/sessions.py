@@ -1418,6 +1418,8 @@ async def get_sessions_general(
                 "recap_rows": [],
                 "moment_distribution": [],
                 "moment_total_errors": 0,
+                "error_type_distribution": [],
+                "error_type_total": 0,
                 "site_success_cards": [],
                 "site_success_bars": [],
             },
@@ -1500,6 +1502,8 @@ async def get_sessions_general(
     recap_rows: list[dict] = []
     moment_distribution = []
     moment_total_errors = 0
+    error_type_distribution: list[dict[str, int | float | str]] = []
+    error_type_total = 0
 
     if not err.empty:
         err_grouped = (
@@ -1615,6 +1619,34 @@ async def get_sessions_general(
             for _, row in counts_moment.iterrows()
         ]
 
+        error_type_order = ["Erreur_EVI", "Erreur_DownStream", "Erreur_Unknow_S"]
+        error_type_labels = {
+            "Erreur_EVI": "EVI",
+            "Erreur_DownStream": "Downstream",
+            "Erreur_Unknow_S": "Erreur_Unknow_S",
+        }
+
+        type_counts = (
+            err[err["type_erreur"].isin(error_type_order)]
+            .groupby("type_erreur")
+            .size()
+            .reindex(error_type_order, fill_value=0)
+            .reset_index(name="count")
+        )
+
+        error_type_total = int(type_counts["count"].sum())
+
+        error_type_distribution = [
+            {
+                "type_erreur": row["type_erreur"],
+                "label": error_type_labels.get(row["type_erreur"], row["type_erreur"]),
+                "count": int(row["count"]),
+                "percent": round(row["count"] / error_type_total * 100, 1) if error_type_total else 0,
+            }
+            for _, row in type_counts.iterrows()
+            if row["count"] > 0
+        ]
+
     return templates.TemplateResponse(
         "partials/sessions_general.html",
         {
@@ -1628,6 +1660,8 @@ async def get_sessions_general(
             "recap_rows": recap_rows,
             "moment_distribution": moment_distribution,
             "moment_total_errors": moment_total_errors,
+            "error_type_distribution": error_type_distribution,
+            "error_type_total": error_type_total,
             "site_success_cards": site_success_cards,
             "site_success_bars": site_success_bars,
         },
