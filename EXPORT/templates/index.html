@@ -3,623 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Erreurs de Charge</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" defer></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>ELTO Dashboard - Analyse des erreurs</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --color-bg: #f8fafc;
-            --color-surface: #ffffff;
-            --color-border: #e2e8f0;
-            --color-text: #1e293b;
-            --color-text-muted: #64748b;
-            --color-primary: #dc2626;
-            --color-success: #10b981;
-            --color-warning: #f59e0b;
-            --color-danger: #ef4444;
-            --radius: 8px;
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            line-height: 1.5;
-        }
-        
-        /* Header */
-        .header {
-            background: var(--color-surface);
-            border-bottom: 1px solid var(--color-border);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header-logo { 
-            font-size: 1.25rem; 
-            font-weight: 700; 
-        }
-        .header-title { 
-            color: var(--color-text-muted); 
-        }
-        .header-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .header-nidec-logo {
-            height: 32px;
-            width: auto;
-            object-fit: contain;
-        }
-                
-        /* Main */
-        .main { max-width: 1750px; margin: 0 auto; padding: 1.5rem; }
-        
-        /* Filters */
-        .filters {
-            background: var(--color-surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--color-border);
-        }
-        
-        .filter-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-        
-        .filter-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--color-text-muted);
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Tags */
-        .tags-box {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            padding: 0.5rem;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            min-height: 40px;
-            max-height: 100px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.2rem 0.5rem;
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #fca5a5;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .tag.inactive {
-            background: #e2e8f0;
-            color: #475569;
-            border-color: #cbd5e1;
-            opacity: 0.85;
-        }
-        
-        .tag-remove {
-            background: none;
-            border: none;
-            color: inherit;
-            cursor: pointer;
-            font-size: 1rem;
-            line-height: 1;
-            opacity: 0.7;
-        }
-        .tag-remove:hover { opacity: 1; }
-        
-        /* Buttons */
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius);
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid var(--color-border);
-            background: var(--color-surface);
-            transition: all 0.15s;
-        }
-        .btn:hover { background: var(--color-bg); }
-        .btn.active {
-            background: var(--color-primary);
-            color: white;
-            border-color: var(--color-primary);
-        }
-        
-        /* Period buttons */
-        .period-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        
-        /* Month selector */
-        .month-selector {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        .month-radios {
-            display: flex;
-            gap: 0.25rem;
-            flex-wrap: wrap;
-        }
-        .month-radio {
-            display: flex;
-            align-items: center;
-            gap: 0.2rem;
-            padding: 0.3rem 0.5rem;
-            background: var(--color-bg);
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        .month-radio:hover { background: var(--color-border); }
-        .month-radio input { accent-color: var(--color-primary); }
-        
-        .select-input {
-            padding: 0.5rem;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            font-size: 0.9rem;
-        }
-        
-        /* Summary */
-        .summary {
-            padding: 0.75rem 1rem;
-            background: #dbeafe;
-            border: 1px solid #93c5fd;
-            border-radius: var(--radius);
-            color: #1e40af;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        
-        .summary-bar {
-            display: flex;
-            gap: 2rem;
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--color-border);
-            margin-bottom: 1rem;
-        }
-        
-        /* Toggles */
-        .toggles { display: flex; flex-direction: column; gap: 0.5rem; }
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .toggle {
-            position: relative;
-            width: 40px;
-            height: 22px;
-        }
-        .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: #cbd5e1;
-            border-radius: 22px;
-            transition: 0.2s;
-        }
-        .toggle-slider::before {
-            content: "";
-            position: absolute;
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: 0.2s;
-        }
-        .toggle input:checked + .toggle-slider { background: var(--color-primary); }
-        .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
-        .toggle-label { font-size: 0.85rem; }
-        
-        /* Tabs */
-        .tabs-section {
-            background: var(--color-surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            border: 1px solid var(--color-border);
-        }
-        .tabs-nav {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--color-border);
-            margin-bottom: 1.5rem;
-        }
-        .tab-btn {
-            padding: 0.5rem 1rem;
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .tab-btn:hover { background: var(--color-border); }
-        .tab-btn.active {
-            background: var(--color-primary);
-            color: white;
-            border-color: var(--color-primary);
-        }
-        
-        /* Loading */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 2rem;
-            color: var(--color-text-muted);
-        }
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--color-border);
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* KPI Cards */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .kpi-card {
-            background: var(--color-surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid var(--color-border);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .kpi-card[data-nav-tab] { cursor: pointer; }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-        }
-        .kpi-card.success::before { background: linear-gradient(90deg, #10b981, #34d399); }
-        .kpi-card.warning::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .kpi-card.danger::before { background: linear-gradient(90deg, #ef4444, #f87171); }
-        
-        .kpi-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-        .kpi-card.success .kpi-value { color: var(--color-success); }
-        .kpi-card.warning .kpi-value { color: var(--color-warning); }
-        .kpi-card.danger .kpi-value { color: var(--color-danger); }
-        
-        .kpi-label {
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-            margin-top: 0.5rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .kpi-sublabel {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 0.25rem;
-        }
-        
-        /* Sections */
-        .section-header {
-            font-size: 1rem;
-            font-weight: 700;
-            margin: 1.5rem 0 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--color-border);
-        }
-        
-        /* Grid layouts */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-        
-        /* Bar charts */
-        .bar-chart { display: flex; flex-direction: column; gap: 0.5rem; }
-        .bar-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .bar-label {
-            flex: 0 0 120px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .bar-container {
-            flex: 1;
-            height: 24px;
-            background: var(--color-bg);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .bar {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s;
-        }
-        .bar-success { background: linear-gradient(90deg, #86efac, #10b981); }
-        .bar-danger { background: linear-gradient(90deg, #fca5a5, #ef4444); }
-        .bar-value {
-            flex: 0 0 60px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-align: right;
-        }
-        .text-success { color: var(--color-success); }
-        .text-danger { color: var(--color-danger); }
-        
-        /* Watch card */
-        .watch-card {
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
-            border: 1px solid #bfdbfe;
-            border-radius: var(--radius);
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        .watch-card-title {
-            color: #1d4ed8;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        .watch-card-sites {
-            color: var(--color-text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-        
-        /* Site expander */
-        .site-expander { margin-bottom: 0.5rem; }
-        .site-expander summary {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background: var(--color-bg);
-            border-radius: var(--radius);
-            cursor: pointer;
-            list-style: none;
-        }
-        .site-expander summary::-webkit-details-marker { display: none; }
-        .site-expander summary::before {
-            content: '▶';
-            font-size: 0.7rem;
-            margin-right: 0.5rem;
-            transition: transform 0.2s;
-        }
-        .site-expander[open] summary::before { transform: rotate(90deg); }
-        .site-content {
-            padding: 1rem;
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-top: none;
-            border-radius: 0 0 var(--radius) var(--radius);
-        }
-        
-        /* Defect cards */
-        .defects-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-        .defect-card {
-            padding: 0.75rem;
-            border-radius: var(--radius);
-            border-left: 4px solid;
-        }
-        .defect-card.critical {
-            border-left-color: var(--color-danger);
-            background: linear-gradient(90deg, #fef2f2, white);
-        }
-        .defect-card.warning {
-            border-left-color: var(--color-warning);
-            background: linear-gradient(90deg, #fffbeb, white);
-        }
-        .defect-name { font-weight: 600; font-size: 0.9rem; }
-        .defect-eqp { color: var(--color-text-muted); font-size: 0.8rem; }
-        .defect-duration { color: #94a3b8; font-size: 0.75rem; font-style: italic; margin-top: 0.25rem; }
-        
-        /* Equipment header */
-        .equipment-header {
-            display: inline-block;
-            padding: 0.4rem 0.75rem;
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 4px;
-            color: #0369a1;
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin: 1rem 0 0.5rem;
-        }
-        
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: var(--color-text-muted);
-            background: var(--color-bg);
-            border-radius: var(--radius);
-        }
-        .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        
-        /* Divider */
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--color-border), transparent);
-            margin: 1.5rem 0;
-        }
-        
-        /* Filter row errors */
-        .filter-row-errors {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 1.5rem;
-            align-items: start;
-        }
-        
-        @media (max-width: 768px) {
-            .grid-2, .filter-row-errors { grid-template-columns: 1fr; }
-            .defects-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
+    <!-- Header -->
     <header class="header">
-        <div class="header-logo">⚡ ELTO</div>
-        <div class="header-center">
-            <div class="header-title">Dashboard Erreurs de Charge</div>
-            <img src="assets/nidec.png" alt="Nidec Logo" class="header-nidec-logo">
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="background: #f1f5f9; color: var(--color-text); border-radius: 16px; padding: 0.4rem 0.8rem; font-weight: 600; font-size: 0.9rem;">
-                👤 {{ user.username if user else "Invité" }}
+        <div class="header-content">
+            <div class="logo">
+                <img src="/assets/nidec.png" alt="ELTO" onerror="this.style.display='none'">
+                <span class="logo-text">ELTO Dashboard</span>
             </div>
-            <div>Mise à jour: <span id="update-time">--:--</span></div>
-            <button class="btn" id="logout-btn" type="button">Déconnexion</button>
+            <div class="header-title">Analyse des erreurs de charge</div>
         </div>
     </header>
 
-    <main class="main">
-        <section class="filters">
-            <!-- Sites -->
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <!-- Sites Filter -->
+            <div class="filter-row filter-row-sites">
+                <div class="filter-group filter-group-sites">
+                    <label class="filter-label">Sites</label>
+                    <button id="btn-all-sites" class="btn-all-sites" type="button">
+                        <span class="checkbox-icon">☐</span>
+                        Tous les sites
+                    </button>
+                </div>
+
+                <div class="filter-group filter-group-sites-select" id="sites-container">
+                    <div id="sites-tags" class="multiselect-tags"></div>
+                    <div id="sites-dropdown" class="multiselect-dropdown">
+                        <input type="text" class="multiselect-search" placeholder="Rechercher un site...">
+                        <div class="multiselect-options">
+                            {% for site in sites %}
+                            <div class="multiselect-option" data-value="{{ site }}">
+                                <span class="option-checkbox">☐</span>
+                                <span>{{ site }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="filter-divider">
+
+            <!-- Date Filter -->
             <div class="filter-row">
-                <button class="btn" onclick="toggleAllSites()" id="btn-all-sites">☑ Tous les sites</button>
-                <div class="tags-box" id="sites-tags"></div>
-            </div>
-            
-            <!-- Période -->
-            <div class="filter-label">📅 Période d'analyse</div>
-            <div class="filter-row period-btns">
-                <button class="btn" data-mode="focus_jour" onclick="setDateMode('focus_jour')">Focus Jour</button>
-                <button class="btn active" data-mode="focus_mois" onclick="setDateMode('focus_mois')">Focus Mois</button>
-                <button class="btn" data-mode="j_minus_1" onclick="setDateMode('j_minus_1')">J-1 (Hier)</button>
-                <button class="btn" data-mode="semaine_minus_1" onclick="setDateMode('semaine_minus_1')">Semaine -1</button>
-                <button class="btn" data-mode="toute_periode" onclick="setDateMode('toute_periode')">Toute la période</button>
-            </div>
-            
-            <!-- Month selector -->
-            <div class="filter-row month-selector" id="month-selector">
-                <div>
-                    <div class="filter-label">Année</div>
-                    <select class="select-input" id="year-select" onchange="updateDates()">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                    </select>
+                <div class="filter-group">
+                    <label class="filter-label">Date début</label>
+                    <input type="date" id="date-debut" class="date-input" value="{{ date_min }}">
                 </div>
-                <div>
-                    <div class="filter-label">Mois</div>
-                    <div class="month-radios" id="month-radios"></div>
+                <div class="filter-group">
+                    <label class="filter-label">Date fin</label>
+                    <input type="date" id="date-fin" class="date-input" value="{{ date_max }}">
                 </div>
-            </div>
-            
-            <!-- Day selector -->
-            <div class="filter-row" id="day-selector" style="display:none;">
-                <div>
-                    <div class="filter-label">Sélectionner une date</div>
-                    <input type="date" class="select-input" id="day-input" onchange="updateDates()">
-                </div>
-            </div>
-            
-            <!-- Period summary -->
-            <div class="summary" id="period-summary">📅 Mois complet : December 2025</div>
-            
-            <!-- Global summary -->
-            <div class="summary-bar">
-                <span><strong>Période:</strong> <span id="sum-dates">--</span></span>
-                <span><strong>Sites:</strong> <span id="sum-sites">--</span></span>
-            </div>
-            
-            <!-- Error filters -->
-            <div class="filter-row-errors">
-                <div>
-                    <div class="filter-label">Type d'erreur (global)</div>
-                    <div class="tags-box" id="error-type-tags"></div>
-                </div>
-                <div>
-                    <div class="filter-label">Moment d'erreur</div>
-                    <div class="tags-box" id="moment-tags"></div>
-                </div>
-                <div class="toggles">
-                    <div class="toggle-row">
-                        <label class="toggle">
-                            <input type="checkbox" id="toggle-avant" checked onchange="onToggle()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">⚡ Avant charge</span>
+                <div class="filter-group" style="flex: 1;">
+                    <label class="filter-label">&nbsp;</label>
+                    <div class="period-summary" id="period-summary">
+                        Période: {{ date_min }} au {{ date_max }}
                     </div>
-                    <div class="toggle-row">
-                        <label class="toggle">
-                            <input type="checkbox" id="toggle-charge" checked onchange="onToggle()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">🔋 Charge</span>
+                </div>
+            </div>
+
+            <hr class="filter-divider">
+
+            <!-- Error Type & Moment Filters -->
+            <div class="filter-row filter-row-errors">
+                <div class="filter-group filter-group-error-type" id="error-types-container">
+                    <label class="filter-label">Type d'erreur</label>
+                    <div id="error-types-tags" class="multiselect-tags"></div>
+                    <div id="error-types-dropdown" class="multiselect-dropdown">
+                        <input type="text" class="multiselect-search" placeholder="Rechercher...">
+                        <div class="multiselect-options">
+                            <!-- Rempli dynamiquement -->
+                        </div>
                     </div>
-                    <div class="toggle-row">
-                        <label class="toggle">
-                            <input type="checkbox" id="toggle-fin" checked onchange="onToggle()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">⚡ Fin de charge</span>
+                </div>
+
+                <div class="filter-group filter-group-moment" id="moments-container">
+                    <label class="filter-label">Moment de l'erreur</label>
+                    <div id="moments-tags" class="multiselect-tags"></div>
+                    <div id="moments-dropdown" class="multiselect-dropdown">
+                        <input type="text" class="multiselect-search" placeholder="Rechercher...">
+                        <div class="multiselect-options">
+                            <!-- Rempli dynamiquement -->
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- Tabs Section -->
         <section class="tabs-section">
             <nav class="tabs-nav">
-                <button class="tab-btn active" data-tab="sessions_general" type="button">Générale</button>
-                <button class="tab-btn" data-tab="sessions_site_details" type="button">Détails Site</button>
-                <button class="tab-btn" data-tab="error_analysis" type="button">Analyse Erreur</button>
+                <button class="tab-btn active" data-tab="sessions_general" type="button">
+                    Générale
+                </button>
+                <button class="tab-btn" data-tab="sessions_site_details" type="button">
+                    Détails Site
+                </button>
+                <button class="tab-btn" data-tab="error_analysis" type="button">
+                    Analyse Erreur
+                </button>
             </nav>
 
             <div id="tab-content" class="tab-content">
@@ -631,169 +121,10 @@
         </section>
     </main>
 
-    <script>
-        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-        const sites = {{ sites | tojson }};
-        const placeholderErrorTypes = ['Communication', 'Batterie', 'Connecteur'];
-        const placeholderMoments = ['Avant charge', 'Pendant charge', 'Fin de charge'];
-
-        let selectedSites = new Set(sites);
-        let dateMode = 'focus_mois';
-
-        function renderSites() {
-            const container = document.getElementById('sites-tags');
-            container.innerHTML = '';
-
-            if (selectedSites.size === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'tag inactive';
-                empty.textContent = 'Aucun site sélectionné';
-                container.appendChild(empty);
-                return;
-            }
-
-            selectedSites.forEach((site) => {
-                const tag = document.createElement('div');
-                tag.className = 'tag';
-                tag.dataset.value = site;
-                tag.innerHTML = `${site} <button class="tag-remove" aria-label="Retirer ${site}">×</button>`;
-                tag.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    removeSite(site);
-                });
-                container.appendChild(tag);
-            });
-            updateSummaries();
-        }
-
-        function renderTags(list, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            list.forEach((label) => {
-                const tag = document.createElement('div');
-                tag.className = 'tag inactive';
-                tag.textContent = label;
-                tag.addEventListener('click', () => {
-                    tag.classList.toggle('inactive');
-                });
-                container.appendChild(tag);
-            });
-        }
-
-        function removeSite(site) {
-            selectedSites.delete(site);
-            renderSites();
-        }
-
-        function toggleAllSites() {
-            if (selectedSites.size !== sites.length) {
-                selectedSites = new Set(sites);
-                document.getElementById('btn-all-sites').textContent = '☑ Tous les sites';
-            } else {
-                selectedSites.clear();
-                document.getElementById('btn-all-sites').textContent = '☐ Aucun site';
-            }
-            renderSites();
-        }
-
-        function buildMonthRadios() {
-            const radios = document.getElementById('month-radios');
-            radios.innerHTML = '';
-            months.forEach((month, index) => {
-                const label = document.createElement('label');
-                label.className = 'month-radio';
-                label.innerHTML = `<input type="radio" name="month" value="${index}" onchange="updateDates()"> ${month}`;
-                radios.appendChild(label);
-            });
-        }
-
-        function setDefaultDates() {
-            const yearSelect = document.getElementById('year-select');
-            const monthRadios = document.querySelectorAll('input[name="month"]');
-            const defaultDate = new Date('{{ date_max }}');
-            if (!Number.isNaN(defaultDate.getTime())) {
-                yearSelect.value = defaultDate.getFullYear();
-                const monthIndex = defaultDate.getMonth();
-                if (monthRadios[monthIndex]) {
-                    monthRadios[monthIndex].checked = true;
-                }
-                document.getElementById('day-input').value = defaultDate.toISOString().slice(0, 10);
-            } else if (monthRadios[0]) {
-                monthRadios[0].checked = true;
-            }
-            updateDates();
-        }
-
-        function setDateMode(mode) {
-            dateMode = mode;
-            document.querySelectorAll('.period-btns .btn').forEach((btn) => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
-            });
-
-            const monthSelector = document.getElementById('month-selector');
-            const daySelector = document.getElementById('day-selector');
-            monthSelector.style.display = mode === 'focus_mois' ? 'flex' : 'none';
-            daySelector.style.display = mode === 'focus_jour' || mode === 'j_minus_1' ? 'flex' : 'none';
-
-            if (mode === 'j_minus_1') {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                document.getElementById('day-input').value = yesterday.toISOString().slice(0, 10);
-            }
-
-            updateDates();
-        }
-
-        function updateDates() {
-            const year = document.getElementById('year-select').value;
-            const monthRadio = document.querySelector('input[name="month"]:checked');
-            const dayInput = document.getElementById('day-input').value;
-            const summary = document.getElementById('period-summary');
-            let description = '';
-
-            if (dateMode === 'focus_mois' && monthRadio) {
-                const monthName = months[Number(monthRadio.value)];
-                description = `📅 Mois complet : ${monthName} ${year}`;
-            } else if (dateMode === 'focus_jour' && dayInput) {
-                description = `📅 Jour sélectionné : ${dayInput}`;
-            } else if (dateMode === 'j_minus_1') {
-                description = '📅 Focus : Hier';
-            } else if (dateMode === 'semaine_minus_1') {
-                description = '📅 Période : Semaine précédente';
-            } else {
-                description = '📅 Période complète sélectionnée';
-            }
-
-            summary.textContent = description;
-            updateSummaries();
-        }
-
-        function updateSummaries() {
-            const sitesText = selectedSites.size === 0 ? 'Aucun' : `${selectedSites.size} site(s)`;
-            document.getElementById('sum-sites').textContent = sitesText;
-            document.getElementById('sum-dates').textContent = document.getElementById('period-summary').textContent.replace('📅 ', '');
-        }
-
-        function onToggle() {
-            // Placeholder for toggle interactions
-            updateSummaries();
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('update-time').textContent = timeString;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            buildMonthRadios();
-            renderSites();
-            renderTags(placeholderErrorTypes, 'error-type-tags');
-            renderTags(placeholderMoments, 'moment-tags');
-            setDefaultDates();
-            updateClock();
-            setInterval(updateClock, 60000);
-        });
-    </script>
+    <!-- Scripts (séparés du HTML) -->
+    <script src="/static/js/filters.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/tables.js"></script>
+    <script src="/static/js/app.js"></script>
 </body>
 </html>
