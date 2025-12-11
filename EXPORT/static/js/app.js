@@ -257,6 +257,16 @@
     }
 
     /**
+     * Met à jour l'heure affichée dans le header
+     */
+    function updateTime() {
+        const timeEl = document.getElementById('update-time');
+        if (timeEl) {
+            timeEl.textContent = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        }
+    }
+
+    /**
      * Initialisation au chargement de la page
      */
     function init() {
@@ -282,6 +292,10 @@
 
         // Charge l'onglet par défaut
         loadTab(ELTO.currentTab);
+
+        // Met à jour l'heure et configure l'intervalle
+        updateTime();
+        setInterval(updateTime, 60000);
     }
 
     // Expose les fonctions nécessaires

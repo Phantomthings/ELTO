@@ -11,12 +11,13 @@
 <body>
     <!-- Header -->
     <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <img src="/assets/nidec.png" alt="ELTO" onerror="this.style.display='none'">
-                <span class="logo-text">ELTO Dashboard</span>
-            </div>
-            <div class="header-title">Analyse des erreurs de charge</div>
+        <div class="header-logo">⚡ ELTO</div>
+        <div class="header-center">
+            <div class="header-title">Dashboard Erreurs de Charge</div>
+            <img src="/assets/nidec.png" alt="Nidec Logo" class="header-nidec-logo">
+        </div>
+        <div class="header-right">
+            <div>Mise à jour: <span id="update-time">--:--</span></div>
         </div>
     </header>
 
@@ -93,6 +94,30 @@
                         <div class="multiselect-options">
                             <!-- Rempli dynamiquement -->
                         </div>
+                    </div>
+                </div>
+
+                <div class="toggles">
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-avant" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">⚡ Avant charge</span>
+                    </div>
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-charge" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">🔋 Charge</span>
+                    </div>
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-fin" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">⚡ Fin de charge</span>
                     </div>
                 </div>
             </div>
