@@ -1,0 +1,21 @@
+# ELTO Dashboard - Module Export
+# Dépendances Python
+
+# Framework web
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Base de données
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
+
+# Traitement des données
+pandas>=2.1.0
+numpy>=1.26.0
+
+# Templates
+jinja2>=3.1.0
+
+# HTTP
+httpx>=0.26.0
+python-multipart>=0.0.6

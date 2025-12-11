@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Erreurs de Charge - ELTO</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script>
+        // Global date range from server
+        window.dateMin = '{{ date_min }}';
+        window.dateMax = '{{ date_max }}';
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-logo">⚡ ELTO</div>
+        <div class="header-center">
+            <div class="header-title">Dashboard Erreurs de Charge</div>
+            <img src="/assets/nidec.png" alt="Nidec Logo" class="header-nidec-logo" onerror="this.style.display='none'">
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div>Mise à jour: <span id="update-time">--:--</span></div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="filters">
+            <!-- Sites -->
+            <div class="filter-row">
+                <button class="btn" onclick="toggleAllSites()" id="btn-all-sites">☑ Tous les sites</button>
+                <div class="tags-box" id="sites-tags"></div>
+            </div>
+
+            <!-- Période -->
+            <div class="filter-label">📅 Période d'analyse</div>
+            <div class="filter-row period-btns">
+                <button class="btn" data-mode="focus_jour" onclick="setDateMode('focus_jour')">Focus Jour</button>
+                <button class="btn active" data-mode="focus_mois" onclick="setDateMode('focus_mois')">Focus Mois</button>
+                <button class="btn" data-mode="j_minus_1" onclick="setDateMode('j_minus_1')">J-1 (Hier)</button>
+                <button class="btn" data-mode="semaine_minus_1" onclick="setDateMode('semaine_minus_1')">Semaine -1</button>
+                <button class="btn" data-mode="toute_periode" onclick="setDateMode('toute_periode')">Toute la période</button>
+            </div>
+
+            <!-- Month selector -->
+            <div class="filter-row month-selector" id="month-selector">
+                <div>
+                    <div class="filter-label">Année</div>
+                    <select class="select-input" id="year-select" onchange="updateDates()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="filter-label">Mois</div>
+                    <div class="month-radios" id="month-radios"></div>
+                </div>
+            </div>
+
+            <!-- Day selector -->
+            <div class="filter-row" id="day-selector" style="display:none;">
+                <div>
+                    <div class="filter-label">Sélectionner une date</div>
+                    <input type="date" class="select-input" id="day-input" onchange="updateDates()">
+                </div>
+            </div>
+
+            <!-- Period summary -->
+            <div class="summary" id="period-summary">📅 Mois complet : December 2025</div>
+
+            <!-- Global summary -->
+            <div class="summary-bar">
+                <span><strong>Période:</strong> <span id="sum-dates">--</span></span>
+                <span><strong>Sites:</strong> <span id="sum-sites">--</span></span>
+            </div>
+
+            <!-- Error filters -->
+            <div class="filter-row-errors">
+                <div>
+                    <div class="filter-label">Type d'erreur (global)</div>
+                    <div class="tags-box" id="error-type-tags"></div>
+                </div>
+                <div>
+                    <div class="filter-label">Moment d'erreur</div>
+                    <div class="tags-box" id="moment-tags"></div>
+                </div>
+                <div class="toggles">
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-avant" checked onchange="onToggle()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">⚡ Avant charge</span>
+                    </div>
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-charge" checked onchange="onToggle()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">🔋 Charge</span>
+                    </div>
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-fin" checked onchange="onToggle()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">⚡ Fin de charge</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tabs-section">
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="general">📋 Générale</button>
+                <button class="tab-btn" data-tab="details-site">🔌 Détails Site</button>
+                <button class="tab-btn" data-tab="analyse-erreur">🔍 Analyse Erreur</button>
+            </div>
+            <div id="tab-content">
+                <div class="loading"><span class="spinner"></span> Chargement...</div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+{% if no_data %}
+<div class="empty-state">
+    <div class="empty-icon">📊</div>
+    <div>Aucune donnée disponible pour cette période</div>
+</div>
+{% elif no_errors %}
+<div class="empty-state">
+    <div class="empty-icon">✅</div>
+    <div>Aucune erreur sur cette période - Félicitations !</div>
+</div>
+{% else %}
+
+<!-- Top 3 erreurs (EVI + Downstream) -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Top 3 erreurs (EVI + Downstream)
+    </h4>
+    {% if top_all %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="top-all-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="text">Moment</th>
+                    <th class="sortable" data-type="number">Step</th>
+                    <th class="sortable" data-type="number">Code</th>
+                    <th class="sortable" data-type="text">Type</th>
+                    <th class="sortable" data-type="number">Occurrences</th>
+                    <th class="sortable" data-type="number">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in top_all %}
+                <tr>
+                    <td>{{ row.moment_label }}</td>
+                    <td data-sort-value="{{ row.step }}">{{ row.step | int }}</td>
+                    <td data-sort-value="{{ row.code }}">{{ row.code | int }}</td>
+                    <td>{{ row.type }}</td>
+                    <td data-sort-value="{{ row.Occurrences }}">{{ row.Occurrences }}</td>
+                    <td data-sort-value="{{ row.percent }}">{{ row.percent }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas de données Top 3</div>
+    {% endif %}
+</div>
+
+<!-- Détail Top 3 par site (Pivot) -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Détail Top 3 par site
+    </h4>
+    {% if detail_all_pivot and detail_all_pivot.rows %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="detail-all-pivot-table">
+            <thead>
+                <tr>
+                    {% for col in detail_all_pivot.columns %}
+                    <th class="sortable{% if col != 'Site' %} multiline{% endif %}" data-type="{{ 'text' if col == 'Site' else 'number' }}">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in detail_all_pivot.rows %}
+                <tr>
+                    {% for col in detail_all_pivot.columns %}
+                    <td data-sort-value="{{ row[col] }}">{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas de données pivot</div>
+    {% endif %}
+</div>
+
+<!-- Top 3 erreurs EVI -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Top 3 erreurs EVI
+    </h4>
+    {% if top_evi %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="top-evi-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="text">Moment</th>
+                    <th class="sortable" data-type="number">Step</th>
+                    <th class="sortable" data-type="number">Code EVI</th>
+                    <th class="sortable" data-type="number">Occurrences</th>
+                    <th class="sortable" data-type="number">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in top_evi %}
+                <tr>
+                    <td>{{ row.moment_label }}</td>
+                    <td data-sort-value="{{ row.step }}">{{ row.step | int }}</td>
+                    <td data-sort-value="{{ row.code }}">{{ row.code | int }}</td>
+                    <td data-sort-value="{{ row.Occurrences }}">{{ row.Occurrences }}</td>
+                    <td data-sort-value="{{ row.percent }}">{{ row.percent }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas d'erreurs EVI</div>
+    {% endif %}
+</div>
+
+<!-- Détail EVI Top 3 par site (Pivot) -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Détail EVI Top 3 par site
+    </h4>
+    {% if detail_evi_pivot and detail_evi_pivot.rows %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="detail-evi-pivot-table">
+            <thead>
+                <tr>
+                    {% for col in detail_evi_pivot.columns %}
+                    <th class="sortable{% if col != 'Site' %} multiline{% endif %}" data-type="{{ 'text' if col == 'Site' else 'number' }}">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in detail_evi_pivot.rows %}
+                <tr>
+                    {% for col in detail_evi_pivot.columns %}
+                    <td data-sort-value="{{ row[col] }}">{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas de données pivot EVI</div>
+    {% endif %}
+</div>
+
+<!-- Top 3 erreurs Downstream -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Top 3 erreurs Downstream
+    </h4>
+    {% if top_ds %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="top-ds-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="text">Moment</th>
+                    <th class="sortable" data-type="number">Step</th>
+                    <th class="sortable" data-type="number">Code PC</th>
+                    <th class="sortable" data-type="number">Occurrences</th>
+                    <th class="sortable" data-type="number">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in top_ds %}
+                <tr>
+                    <td>{{ row.moment_label }}</td>
+                    <td data-sort-value="{{ row.step }}">{{ row.step | int }}</td>
+                    <td data-sort-value="{{ row.code }}">{{ row.code | int }}</td>
+                    <td data-sort-value="{{ row.Occurrences }}">{{ row.Occurrences }}</td>
+                    <td data-sort-value="{{ row.percent }}">{{ row.percent }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas d'erreurs Downstream</div>
+    {% endif %}
+</div>
+
+<!-- Détail Downstream Top 3 par site (Pivot) -->
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Détail Downstream Top 3 par site
+    </h4>
+    {% if detail_ds_pivot and detail_ds_pivot.rows %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="detail-ds-pivot-table">
+            <thead>
+                <tr>
+                    {% for col in detail_ds_pivot.columns %}
+                    <th class="sortable{% if col != 'Site' %} multiline{% endif %}" data-type="{{ 'text' if col == 'Site' else 'number' }}">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in detail_ds_pivot.rows %}
+                <tr>
+                    {% for col in detail_ds_pivot.columns %}
+                    <td data-sort-value="{{ row[col] }}">{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Pas de données pivot Downstream</div>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    if (typeof initTableSorting === 'function') {
+        initTableSorting('top-all-table');
+        initTableSorting('detail-all-pivot-table');
+        initTableSorting('top-evi-table');
+        initTableSorting('detail-evi-pivot-table');
+        initTableSorting('top-ds-table');
+        initTableSorting('detail-ds-pivot-table');
+    }
+})();
+</script>
+
+{% endif %}

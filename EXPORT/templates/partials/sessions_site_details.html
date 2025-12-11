@@ -1,0 +1,248 @@
+<div class="site-header">
+    <div class="filters-row">
+        <div class="filter-group">
+            <div class="filter-label">Site</div>
+            <select class="select-input" id="site-focus" style="width: 100%;" onchange="this.closest('.site-header').dispatchEvent(new CustomEvent('refresh-pdc'));">
+                {% for site in site_options %}
+                <option value="{{ site }}" {% if site == site_focus %}selected{% endif %}>{{ site }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Points de Charge (PDC)</div>
+            <div class="pdc-selector">
+                <div class="pdc-controls">
+                    <button type="button" class="pdc-toggle-btn" id="pdc-toggle" onclick="toggleAllPdcs()">
+                        ☑ Tous
+                    </button>
+                    {% for p in pdc_options %}
+                    <label class="pdc-checkbox-label">
+                        <input type="checkbox" name="pdc-option" value="{{ p }}" {% if p in selected_pdc %}checked{% endif %} onchange="onPdcChange()">
+                        {{ p }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-banner">
+    <div class="stats-content">
+        <div class="stats-main">
+            <div class="stats-label">Taux de réussite</div>
+            <div class="stats-value">{{ site_success_rate }}%</div>
+            <div class="stats-breakdown">
+                <span class="stats-item"><span class="stats-dot stats-dot-ok"></span> {{ site_charges_ok }} OK</span>
+                <span class="stats-item"><span class="stats-dot stats-dot-nok"></span> {{ site_total_charges - site_charges_ok }} NOK</span>
+            </div>
+        </div>
+        <div class="stats-details">
+            <div class="stats-site">{{ site_focus }}</div>
+            <div class="stats-charges">{{ site_total_charges }} charges totales</div>
+        </div>
+    </div>
+</div>
+
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Récapitulatif par PDC
+    </h4>
+    {% if by_pdc %}
+    <div class="mac-table-container">
+        <table class="mac-table" id="pdc-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="text">PDC</th>
+                    <th class="sortable" data-type="number">Total Charges</th>
+                    <th class="sortable" data-type="number">Charges OK</th>
+                    <th class="sortable" data-type="number">Charges NOK</th>
+                    <th class="sortable" data-type="number">% Réussite</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in by_pdc %}
+                <tr>
+                    <td>{{ row.PDC }}</td>
+                    <td data-sort-value="{{ row.Total_Charges }}">{{ row.Total_Charges }}</td>
+                    <td data-sort-value="{{ row.Charges_OK }}">{{ row.Charges_OK }}</td>
+                    <td data-sort-value="{{ row.Charges_NOK }}">{{ row.Charges_NOK }}</td>
+                    <td data-sort-value="{{ row['% Réussite'] }}">{{ row['% Réussite'] }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div>Aucune donnée PDC</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="grid-2" style="margin-bottom: 1.5rem;">
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Répartition des types d'erreur
+        </h4>
+        {% if error_type_distribution %}
+        <div class="bar-chart">
+            {% for item in error_type_distribution %}
+            <div class="bar-row">
+                <span class="bar-label">{{ item.label }}</span>
+                <div class="bar-container">
+                    <div class="bar bar-danger" style="width: {{ item.percent }}%;"></div>
+                </div>
+                <span class="bar-value text-danger">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 1rem; font-weight: 600; color: var(--color-text);">
+            Total erreurs : {{ error_type_total }}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📉</div>
+            <div>Aucune donnée</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Répartition des erreurs par moment
+        </h4>
+        {% if error_moment_grouped %}
+        <div class="bar-chart">
+            {% for item in error_moment_grouped %}
+            <div class="bar-row">
+                <span class="bar-label">{{ item.moment }}</span>
+                <div class="bar-container">
+                    <div class="bar bar-danger" style="width: {{ item.percent }}%;"></div>
+                </div>
+                <span class="bar-value text-danger">{{ item.Nb }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📉</div>
+            <div>Aucune donnée</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if downstream_occ %}
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Occurrences Downstream Code PC × Moment
+    </h4>
+    <div class="mac-table-container">
+        <table class="mac-table" id="downstream-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="number">#</th>
+                    <th class="sortable" data-type="number">Code PC</th>
+                    {% for m in downstream_moments %}
+                    <th class="sortable multiline" data-type="number">{{ m }}</th>
+                    {% endfor %}
+                    <th class="sortable" data-type="number">Total</th>
+                    <th class="sortable" data-type="number">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in downstream_occ %}
+                <tr>
+                    <td>{{ row.Rank }}</td>
+                    <td>{{ row.Code_PC }}</td>
+                    {% for m in downstream_moments %}
+                    <td data-sort-value="{{ row[m] }}">{{ row[m] }}</td>
+                    {% endfor %}
+                    <td data-sort-value="{{ row.Total }}">{{ row.Total }}</td>
+                    <td data-sort-value="{{ row.Percent }}">{{ row.Percent }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if evi_occ %}
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+        Occurrences EVI Code × Moment
+    </h4>
+    <div class="mac-table-container">
+        <table class="mac-table" id="evi-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-type="number">#</th>
+                    <th class="sortable" data-type="number">Code EVI</th>
+                    {% for m in evi_occ_moments %}
+                    <th class="sortable multiline" data-type="number">{{ m }}</th>
+                    {% endfor %}
+                    <th class="sortable" data-type="number">Total</th>
+                    <th class="sortable" data-type="number">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in evi_occ %}
+                <tr>
+                    <td>{{ row.Rank }}</td>
+                    <td>{{ row.EVI_Code }}</td>
+                    {% for m in evi_occ_moments %}
+                    <td data-sort-value="{{ row[m] }}">{{ row[m] }}</td>
+                    {% endfor %}
+                    <td data-sort-value="{{ row.Total }}">{{ row.Total }}</td>
+                    <td data-sort-value="{{ row.Percent }}">{{ row.Percent }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+(function() {
+    // Initialize table sorting
+    if (typeof initTableSorting === 'function') {
+        initTableSorting('pdc-table');
+        initTableSorting('downstream-table');
+        initTableSorting('evi-table');
+    }
+
+    // PDC toggle functions
+    window.toggleAllPdcs = function() {
+        const checkboxes = document.querySelectorAll('input[name="pdc-option"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+        document.getElementById('pdc-toggle').textContent = !allChecked ? '☑ Tous' : '☐ Tous';
+        onPdcChange();
+    };
+
+    window.onPdcChange = function() {
+        const checkboxes = document.querySelectorAll('input[name="pdc-option"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        document.getElementById('pdc-toggle').textContent = allChecked ? '☑ Tous' : '☐ Tous';
+    };
+
+    // Listen for site change
+    const siteHeader = document.querySelector('.site-header');
+    if (siteHeader) {
+        siteHeader.addEventListener('refresh-pdc', function() {
+            const siteSelect = document.getElementById('site-focus');
+            if (siteSelect && window.state) {
+                window.state.siteFocus = siteSelect.value;
+                window.state.siteDetailsPdcs = [];
+                if (typeof refreshTab === 'function') {
+                    refreshTab();
+                }
+            }
+        });
+    }
+})();
+</script>
