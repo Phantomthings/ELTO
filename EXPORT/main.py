@@ -48,6 +48,7 @@ async def dashboard(request: Request):
             "sites": sites,
             "date_min": date_range["min"],
             "date_max": date_range["max"],
+            "user": {"username": "Export"},
         },
     )
 
