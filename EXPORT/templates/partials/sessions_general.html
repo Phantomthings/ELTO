@@ -1,0 +1,161 @@
+<div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+
+    <div class="recap-grid">
+        <div class="recap-card">
+            <div class="recap-card-label">Total charges</div>
+            <div class="recap-card-value">{{ total }}</div>
+        </div>
+        <div class="recap-card">
+            <div class="recap-card-label">Réussite</div>
+            <div class="recap-card-value" style="color: #10b981;">{{ ok }}</div>
+        </div>
+        <div class="recap-card">
+            <div class="recap-card-label">Échec</div>
+            <div class="recap-card-value" style="color: #ef4444;">{{ nok }}</div>
+        </div>
+        <div class="recap-card">
+            <div class="recap-card-label">Taux réussite</div>
+            <div class="recap-card-value" style="color: #3b82f6;">{{ taux_reussite }}%</div>
+        </div>
+        <div class="recap-card">
+            <div class="recap-card-label">Taux échec</div>
+            <div class="recap-card-value" style="color: #f59e0b;">{{ taux_echec }}%</div>
+        </div>
+    </div>
+
+    <div class="success-section">
+        <div class="success-title">Taux de réussite par site</div>
+        {% if site_success_cards %}
+        <div class="success-metrics-grid">
+            {% for item in site_success_cards %}
+            <div class="success-metric-card">
+                <span class="success-dot" style="background: {{ item.color }};"></span>
+                <div class="success-label">{{ item.site }}</div>
+                <div class="success-rate">{{ item.taux_ok }}%</div>
+                <div class="success-value">{{ item.ok }}/{{ item.total }} OK</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="success-bars">
+            {% for item in site_success_bars %}
+            <div class="success-bar-row">
+                <div class="success-bar-label">{{ item.site }}</div>
+                <div class="success-bar-track">
+                    <div class="success-bar-fill" style="width: {{ item.taux_ok }}%; background: {{ item.color }};">{{ item.taux_ok }}%</div>
+                </div>
+                <div class="success-bar-value">{{ item.total }} Charges</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding: 0.75rem 0; color: var(--color-text-muted);">Aucune donnée par site sur la période sélectionnée.</div>
+        {% endif %}
+    </div>
+
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Récapitulatif des erreurs par site et moment
+        </h4>
+        {% if recap_rows %}
+        <div class="mac-table-container">
+            <table class="mac-table" id="recap-table">
+                <thead>
+                    <tr>
+                        {% for col in recap_columns %}
+                        {% set integer_columns = ['Init', 'Lock Connector', 'CableCheck', 'Charge', 'Fin de charge', 'Unknown'] %}
+                        {% set is_numeric = col in integer_columns or col in ['Total', 'Total_OK', 'Total_NOK', '% OK', '% NOK'] %}
+                        <th class="sortable" data-type="{{ 'number' if is_numeric else 'text' }}">{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recap_rows %}
+                    <tr class="recap-row {{ 'site-row' if row.row_type == 'site' else 'pdc-row' }}" data-site-key="{{ row.site_key }}" {% if row.row_type == 'site' %}data-nav-tab="details-site" data-site-focus="{{ row.site_key }}" title="Voir le détail du site"{% endif %}>
+                        {% for col in recap_columns %}
+                        {% set value = row[col] %}
+                        {% set integer_columns = ['Init', 'Lock Connector', 'CableCheck', 'Charge', 'Fin de charge', 'Unknown'] %}
+                        {% set is_integer = col in integer_columns %}
+                        <td data-sort-value="{{ value }}">
+                            {% if col in ['Site / PDC'] and row.row_type == 'pdc' %}
+                                <span class="sub-label">{{ value }}</span>
+                            {% elif col in ['% OK', '% NOK'] %}
+                                {{ value | round(2) }}%
+                            {% elif is_integer %}
+                                {{ value | int }}
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">
+            Aucune donnée récapitulative disponible pour ce périmètre
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Répartition des erreurs par moment (EVI + Downstream)
+        </h4>
+        {% if moment_distribution %}
+        <div class="bar-chart">
+            {% for item in moment_distribution %}
+            <div class="bar-row">
+                <span class="bar-label">{{ item.moment }}</span>
+                <div class="bar-container">
+                    <div class="bar bar-danger" style="width: {{ item.percent }}%;"></div>
+                </div>
+                <span class="bar-value text-danger">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 1rem; font-weight: 600; color: var(--color-text);">
+            Total erreurs : {{ moment_total_errors }}
+        </div>
+        {% else %}
+        <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">
+            Aucune erreur sur la période sélectionnée
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-top: 1.25rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--color-text);">
+            Répartition des types d'erreur (EVI, Downstream, Erreur_Unknow_S)
+        </h4>
+        {% if error_type_distribution %}
+        <div class="bar-chart">
+            {% for item in error_type_distribution %}
+            <div class="bar-row">
+                <span class="bar-label">{{ item.label }}</span>
+                <div class="bar-container">
+                    <div class="bar bar-danger" style="width: {{ item.percent }}%;"></div>
+                </div>
+                <span class="bar-value text-danger">{{ item.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 1rem; font-weight: 600; color: var(--color-text);">
+            Total erreurs suivies : {{ error_type_total }}
+        </div>
+        {% else %}
+        <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">
+            Aucun des types d'erreur suivis (EVI, Downstream ou Erreur_Unknow_S) sur la période sélectionnée
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function() {
+    // Initialise le tri et les graphiques après le chargement du template
+    if (typeof initTables === 'function') initTables();
+    if (typeof initCharts === 'function') initCharts();
+})();
+</script>
