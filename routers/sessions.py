@@ -2111,6 +2111,8 @@ async def get_sessions_site_details(
     error_moment: list[dict] = []
     error_moment_grouped: list[dict] = []
     error_moment_adv: list[dict] = []
+    error_type_distribution: list[dict] = []
+    error_type_total = 0
     if not err_rows.empty:
         if "moment" in err_rows.columns:
             counts = err_rows.groupby("moment").size().reset_index(name="Nb")
@@ -2137,6 +2139,34 @@ async def get_sessions_site_details(
                     counts_adv.assign(percent=lambda d: (d["Nb"] / total_adv * 100).round(2))
                     .to_dict("records")
                 )
+
+        error_type_order = ["Erreur_EVI", "Erreur_DownStream", "Erreur_Unknow_S"]
+        error_type_labels = {
+            "Erreur_EVI": "EVI",
+            "Erreur_DownStream": "Downstream",
+            "Erreur_Unknow_S": "Erreur_Unknow_S",
+        }
+
+        type_counts = (
+            err_rows[err_rows["type_erreur"].isin(error_type_order)]
+            .groupby("type_erreur")
+            .size()
+            .reindex(error_type_order, fill_value=0)
+            .reset_index(name="count")
+        )
+
+        error_type_total = int(type_counts["count"].sum())
+
+        error_type_distribution = [
+            {
+                "type_erreur": row["type_erreur"],
+                "label": error_type_labels.get(row["type_erreur"], row["type_erreur"]),
+                "count": int(row["count"]),
+                "percent": round(row["count"] / error_type_total * 100, 1) if error_type_total else 0,
+            }
+            for _, row in type_counts.iterrows()
+            if row["count"] > 0
+        ]
 
     downstream_occ: list[dict] = []
     downstream_moments: list[str] = []
@@ -2249,6 +2279,8 @@ async def get_sessions_site_details(
             "error_moment": error_moment,
             "error_moment_grouped": error_moment_grouped,
             "error_moment_adv": error_moment_adv,
+            "error_type_distribution": error_type_distribution,
+            "error_type_total": error_type_total,
             "downstream_occ": downstream_occ,
             "downstream_moments": downstream_moments,
             "evi_occ": evi_occ,
